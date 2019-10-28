@@ -304,19 +304,15 @@ function onMouseMoveOrClickOnColorPicker(e) {
 	    mouseY = e.layerY;
 	}
 
-	// console.log('mouseX:', mouseX);
-	// console.log('mouseY:', mouseY);
-
 	if (mouseX === undefined || mouseX < 0) mouseX = lastMouseX;
 	else mouseX--; // 1px difference in getImageData
 	
 	if (mouseY === undefined || mouseY < 0) mouseY = lastMouseY;
 	
-	console.log(':', mouseX, mouseY);
+	// console.log(':', mouseX, mouseY);
 
 	lastMouseX = mouseX;
 	lastMouseY = mouseY;
-	// // // problem with e.offsetX = 0 => mouseX = undefined !!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 	setSampleColorAndInputsValues(mouseX, mouseY, true);
 }
