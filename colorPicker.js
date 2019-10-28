@@ -12,6 +12,7 @@ function appendColorPickerHtml() {
 
 	var colorPickerDivNode = document.createElement('div');
 	colorPickerDivNode.id = 'color-picker-box';
+	colorPickerDivNode.style.setProperty('display', 'none');
 	colorPickerDivNode.style.setProperty('position', 'fixed');
 	colorPickerDivNode.style.setProperty('top', '0');
 	colorPickerDivNode.style.setProperty('left', '0');
@@ -22,11 +23,12 @@ function appendColorPickerHtml() {
 	var colorPickerCanvasNode = document.createElement('canvas');
 	colorPickerCanvasNode.id = 'color-picker';
 	colorPickerCanvasNode.style.setProperty('cursor', 'crosshair');
+	colorPickerCanvasNode.style.setProperty('border', '1px solid #bbb');
 	colorPickerDiv.appendChild(colorPickerCanvasNode);
 
 	var colorSampleNode = document.createElement('div');
 	colorSampleNode.id = 'color-picker-sample';
-	colorSampleNode.style.setProperty('position', 'fixed');
+	colorSampleNode.style.setProperty('position', 'absolute');
 	colorSampleNode.style.setProperty('width', '15px');
 	colorSampleNode.style.setProperty('height', '15px');
 	colorSampleNode.style.setProperty('border', '1px solid #fff');
@@ -41,15 +43,20 @@ appendColorPickerHtml();
 
 var colorPickerSample = document.getElementById('color-picker-sample');
 var colorPickerBtn = document.getElementById('color-picker-btn');
-// var redValueInput = document.getElementById('red-value');
-// var redValueBtn = document.getElementById('apply-red-value');
+var colorPickerDiv = document.getElementById('color-picker-box');
 var colorPicker = document.getElementById('color-picker');
 colorPicker.width = 256;
 colorPicker.height = 256;
-var canvasColorPicker = colorPicker.getContext('2d');
+var colorPickerCanvas = colorPicker.getContext('2d');
+// var redValueInput = document.getElementById('red-value');
+// var redValueBtn = document.getElementById('apply-red-value');
+
+var colorPickerDivLeft = 0;
+var colorPickerDivTop = 0;
 
 colorPickerBtn.addEventListener('click', function () {
 	initColorPicker();
+	showColorPicker();
 });
 
 
@@ -60,6 +67,33 @@ colorPickerBtn.addEventListener('click', function () {
 // 	initColorPicker();
 // });
 
+function getElementOffset(element) {
+	return element.getBoundingClientRect(); // ????????????????????
+}
+
+function showColorPicker() {
+	var colorPickerBtnOffset = colorPickerBtn.getBoundingClientRect();
+	var colorPickerBtnX = colorPickerBtnOffset.x;
+	var colorPickerBtnY = colorPickerBtnOffset.y;
+	var colorPickerBtnWidth = colorPickerBtnOffset.width;
+	var colorPickerBtnHeight = colorPickerBtnOffset.height;
+	var topAddSpace = 10;
+
+	colorPickerDivLeft = colorPickerBtnX + colorPickerBtnWidth / 2 - colorPicker.width / 2;
+	colorPickerDivTop = colorPickerBtnY + colorPickerBtnHeight + topAddSpace;
+
+	if (colorPickerDivLeft < 0) {
+		colorPickerDivLeft = 0;
+	}
+
+	if (colorPickerDivLeft > window.innerWidth - colorPicker.width) {
+		colorPickerDivLeft = window.innerWidth - colorPicker.width;
+	}
+
+	colorPickerDiv.style.left = colorPickerDivLeft + 'px';
+	colorPickerDiv.style.top = colorPickerDivTop + 'px';
+	colorPickerDiv.style.display = 'block';
+}
 
 
 function initColorPicker() {
@@ -71,8 +105,8 @@ function initColorPicker() {
 		
 	// 		rgb = redVal + ',' + i + ',' + j;
 	// 		// console.log(rgb);
-	// 		canvasColorPicker.fillStyle = 'rgb('+ rgb +')';
-	// 		canvasColorPicker.fillRect(i, j, 1, 1);
+	// 		colorPickerCanvas.fillStyle = 'rgb('+ rgb +')';
+	// 		colorPickerCanvas.fillRect(i, j, 1, 1);
 	// 	}
 	// }
 
@@ -88,43 +122,60 @@ function initColorPicker() {
 			hsl = h + ',' + s + '%,' + l + '%';
 			// hsl = h + ',' + s + '%,' + (l - s / 2) + '%';
 			// console.log(hsl);
-			canvasColorPicker.fillStyle = 'hsl('+ hsl +')';
-			canvasColorPicker.fillRect(i, j, 1, 1);
+			colorPickerCanvas.fillStyle = 'hsl('+ hsl +')';
+			colorPickerCanvas.fillRect(i, j, 1, 1);
 		}
 	}
 	
-	console.log('canvasColorPicker loaded');
+	console.log('colorPickerCanvas loaded');
 }
 
 
+var mouseDown = 0;
+document.body.onmousedown = function() { 
+	mouseDown = 1;
+}
+document.body.onmouseup = function() {
+	mouseDown = 0;
+}
 
-
-colorPicker.onmousemove = function (e) {
-
+function onMouseMoveOrClick(e) {
+	
 	var mouseX, mouseY;
 
-    if(e.offsetX) {
-        mouseX = e.offsetX;
-        mouseY = e.offsetY;
-    }
-    else if(e.layerX) {
-        mouseX = e.layerX;
-        mouseY = e.layerY;
-    }
-    // if (mouseX === undefined) mouseX = 0;
-    // if (mouseY === undefined) mouseY = 0;
+	if(e.offsetX) {
+	    mouseX = e.offsetX;
+	    mouseY = e.offsetY;
+	}
+	else if(e.layerX) {
+	    mouseX = e.layerX;
+	    mouseY = e.layerY;
+	}
+	// if (mouseX === undefined) mouseX = 0;
+	// if (mouseY === undefined) mouseY = 0;
 	// console.log(':', mouseX, mouseY);
 
 	// // // problem with e.offsetX = 0 => mouseX = undefined !!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    var colorData = canvasColorPicker.getImageData(mouseX, mouseY, 1, 1).data;
-    var rgb = 'rgb('+ colorData[0] +','+ colorData[1] +','+ colorData[2] +')';
-    // console.log(rgb);
+	var colorData = colorPickerCanvas.getImageData(mouseX, mouseY, 1, 1).data;
+	var rgb = 'rgb('+ colorData[0] +','+ colorData[1] +','+ colorData[2] +')';
+	// console.log(rgb);
 
 
-    colorPickerSample.style.visibility = 'visible';
-    colorPickerSample.style.backgroundColor = rgb;
-    colorPickerSample.style.top = mouseY + 15 + 'px';
-    colorPickerSample.style.left = mouseX + 15 + 'px';
+	colorPickerSample.style.visibility = 'visible';
+	colorPickerSample.style.backgroundColor = rgb;
+	colorPickerSample.style.top = mouseY + 15 + 'px';
+	colorPickerSample.style.left = mouseX + 15 + 'px';
 }
 
+colorPicker.onmousemove = function (e) {
+
+	if (mouseDown) {
+		onMouseMoveOrClick(e);
+	}
+}
+
+colorPicker.onmousedown = function (e) {
+
+	onMouseMoveOrClick(e);
+}
