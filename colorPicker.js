@@ -6,8 +6,8 @@
 **
 */
 
-var colorPickerWidth = 200;
-var colorPickerHeight = 201;
+var colorPickerWidth = 230;
+var colorPickerHeight = 131;
 var colorPickerHueHeight = 20;
 var colorPickerHuePointerWidth = 8;
 var colorPickerHuePointerBorderWidth = 2;
@@ -264,8 +264,8 @@ function initColorPicker(initHuePalette=false) {
 		for (var i = 0; i < colorPickerHeight; i++) {
 			l = (100 - i / (colorPickerHeight - 1) * 100).toFixed(2);
 			// console.log(l);
+			l = l * (1 - s / 200);
 			hsl = h + ',' + s + '%,' + l + '%';
-			// hsl = h + ',' + s + '%,' + (l - s / 2) + '%';
 			// console.log(hsl);
 			colorPickerCanvas.fillStyle = 'hsl('+ hsl +')';
 			colorPickerCanvas.fillRect(j, i, 1, 1);
