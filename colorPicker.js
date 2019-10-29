@@ -2,13 +2,15 @@
 
 /*
 **
-** you need to create a button with id="color-picker-btn"
+** you need to create a button with id="color-picker-btn" and data-close-text="{Close text}"
 **
 */
 
 var colorPickerWidth = 200;
 var colorPickerHeight = 201;
 var colorPickerHueHeight = 20;
+var colorPickerHuePointerWidth = 8;
+var colorPickerHuePointerBorderWidth = 2;
 var colorPickerPointerSize = 15;
 var colorPickerSampleSize = 30;
 var colorPickerDefaultBorder = '1px solid #aaa';
@@ -17,6 +19,7 @@ var colorPickerInputMargin = '0 5px 5px 5px';
 var colorPickerInputWidth = '30px';
 var pointerX = 0;
 var pointerY = 0;
+var huePointerX = 0;
 
 
 function appendColorPickerHtml() {
@@ -41,13 +44,28 @@ function appendColorPickerHtml() {
 	// colorPickerCanvasNode.style.setProperty('border', colorPickerDefaultBorder);
 	colorPickerDivNode.appendChild(colorPickerCanvasNode);
 
+	var colorPickerHueDivNode = document.createElement('div');
+	colorPickerHueDivNode.id = 'color-picker-hue-box';
+	colorPickerHueDivNode.style.setProperty('position', 'relative');
+	colorPickerDivNode.appendChild(colorPickerHueDivNode);
+
 	var colorPickerHueCanvasNode = document.createElement('canvas');
 	colorPickerHueCanvasNode.id = 'color-picker-hue';
 	colorPickerHueCanvasNode.style.setProperty('display', 'block');
 	colorPickerHueCanvasNode.style.setProperty('cursor', 'pointer');
 	colorPickerHueCanvasNode.style.setProperty('margin', '5px 0');
-	// colorPickerHueCanvasNode.style.setProperty('border', colorPickerDefaultBorder);
-	colorPickerDivNode.appendChild(colorPickerHueCanvasNode);
+	colorPickerHueDivNode.appendChild(colorPickerHueCanvasNode);
+
+	var huePointerNode = document.createElement('div');
+	huePointerNode.id = 'color-picker-hue-pointer';
+	huePointerNode.style.setProperty('position', 'absolute');
+	huePointerNode.style.setProperty('top', '0');
+	huePointerNode.style.setProperty('width', colorPickerHuePointerWidth + 'px');
+	huePointerNode.style.setProperty('height', colorPickerHueHeight + 'px');
+	huePointerNode.style.setProperty('border', colorPickerHuePointerBorderWidth + 'px solid #fff');
+	huePointerNode.style.setProperty('box-shadow', '#000 0 0 1px');
+	huePointerNode.style.setProperty('pointer-events', 'none');
+	colorPickerHueDivNode.appendChild(huePointerNode);
 
 	var colorPickerDataDivNode = document.createElement('div');
 	colorPickerDataDivNode.id = 'color-picker-data';
@@ -112,6 +130,7 @@ function appendColorPickerHtml() {
 	colorPointerNode.style.setProperty('box-shadow', '#000 0 0 1px');
 	colorPointerNode.style.setProperty('pointer-events', 'none');
 	colorPickerDivNode.appendChild(colorPointerNode);
+
 }
 
 appendColorPickerHtml();
@@ -121,7 +140,10 @@ appendColorPickerHtml();
 var colorPickerPointer = document.getElementById('color-picker-pointer');
 var colorPickerSample = document.getElementById('color-picker-sample');
 var colorPickerBtn = document.getElementById('color-picker-btn');
+colorPickerBtn.openText = colorPickerBtn.innerText;
+
 var colorPickerDiv = document.getElementById('color-picker-box');
+var colorPickerHuePointer = document.getElementById('color-picker-hue-pointer');
 
 var colorPicker = document.getElementById('color-picker');
 colorPicker.width = colorPickerWidth;
@@ -142,9 +164,21 @@ var colorPickerHexInput = document.getElementById('color-picker-hex-input');
 var colorPickerDivLeft = 0;
 var colorPickerDivTop = 0;
 
+var colorPickerOpen = false;
+
 colorPickerBtn.addEventListener('click', function () {
-	initColorPicker(true);
-	showColorPicker();
+	
+	if (!colorPickerOpen) {
+		colorPickerOpen = true;
+		initColorPicker(true);
+		showColorPicker();
+		this.innerText = this.getAttribute('data-close-text');
+	}
+	else {
+		colorPickerOpen = false;
+		colorPickerDiv.style.display = 'none';
+		this.innerText = this.openText;
+	}
 });
 
 
@@ -331,6 +365,9 @@ function onMouseMoveOrClickOnHuePicker(e) {
 	var colorData = colorPickerHueCanvas.getImageData(mouseX, 1, 1, 1).data;
 	colorHue = getHueFromRgb(colorData[0], colorData[1], colorData[2]);
 	// console.log(colorHue);
+
+	huePointerX = mouseX - colorPickerHuePointerWidth / 2 + colorPickerHuePointerBorderWidth;
+	colorPickerHuePointer.style.left = huePointerX + 'px';
 
 	initColorPicker();
 	setSampleColorAndInputsValues(pointerX, pointerY);
