@@ -11,6 +11,7 @@ var colorPickerHeight = 131;
 var colorPickerHueHeight = 20;
 var colorPickerHuePointerWidth = 8;
 var colorPickerHuePointerBorderWidth = 2;
+var colorPickerPointerBorderWidth = 2;
 var colorPickerPointerSize = 15;
 var colorPickerSampleSize = 30;
 var colorPickerDefaultBorder = '1px solid #aaa';
@@ -35,8 +36,6 @@ function appendColorPickerHtml() {
 	colorPickerDivNode.style.setProperty('background-color', '#fff');
 	colorPickerDivNode.style.setProperty('border', colorPickerDefaultBorder);
 	body.appendChild(colorPickerDivNode);
-
-	// var colorPickerDivNode = document.getElementById('color-picker-box');
 
 	var colorPickerCanvasNode = document.createElement('canvas');
 	colorPickerCanvasNode.id = 'color-picker';
@@ -130,7 +129,6 @@ function appendColorPickerHtml() {
 	colorPointerNode.style.setProperty('box-shadow', '#000 0 0 1px');
 	colorPointerNode.style.setProperty('pointer-events', 'none');
 	colorPickerDivNode.appendChild(colorPointerNode);
-
 }
 
 appendColorPickerHtml();
@@ -253,30 +251,32 @@ function showColorPicker() {
 
 function initColorPicker(initHuePalette=false) {
 
-	var hsl = '';
-	var h = colorHue;
-	var s = 0;
-	var l = 0;
-	var hue = 0;
+	if (initHuePalette) {
+		
+		var paletteHue = 0;
+		for (var j = 0; j < colorPickerWidth; j++) {
 
-	for (var j = 0; j < colorPickerWidth; j++) {
-		s = (j / colorPickerWidth * 100).toFixed(2);
-		for (var i = 0; i < colorPickerHeight; i++) {
-			l = (100 - i / (colorPickerHeight - 1) * 100).toFixed(2);
-			// console.log(l);
-			l = l * (1 - s / 200);
-			hsl = h + ',' + s + '%,' + l + '%';
-			// console.log(hsl);
-			colorPickerCanvas.fillStyle = 'hsl('+ hsl +')';
-			colorPickerCanvas.fillRect(j, i, 1, 1);
-		}
-
-		if (initHuePalette) {
-			hue = 360 - Math.round(j / colorPickerWidth * 360);
-			colorPickerHueCanvas.fillStyle = 'hsl('+ hue +',100%,50%)';
+			paletteHue = 360 - Math.round(j / colorPickerWidth * 360);
+			colorPickerHueCanvas.fillStyle = 'hsl('+ paletteHue +',100%,50%)';
 			colorPickerHueCanvas.fillRect(j, 0, 1, colorPickerHueHeight);
 		}
 	}
+
+	var colorGradient = colorPickerCanvas.createLinearGradient(0, 0, colorPickerWidth, 0);
+	colorGradient.addColorStop(0, 'hsla(' + colorHue + ', 100%, 100%, 1)');
+	colorGradient.addColorStop(0.01, 'hsla(' + colorHue + ', 100%, 100%, 1)');
+	colorGradient.addColorStop(0.99, 'hsla(' + colorHue + ', 100%, 50%, 1)');
+	colorGradient.addColorStop(1, 'hsla(' + colorHue + ', 100%, 50%, 1)');
+	colorPickerCanvas.fillStyle = colorGradient;
+	colorPickerCanvas.fillRect(0, 0, colorPickerWidth, colorPickerHeight);
+
+	var blackGradient = colorPickerCanvas.createLinearGradient(0, 0, 0, colorPickerHeight);
+	blackGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+	blackGradient.addColorStop(0.01, 'rgba(0, 0, 0, 0)');
+	blackGradient.addColorStop(0.99, 'rgba(0, 0, 0, 1)');
+	blackGradient.addColorStop(1, 'rgba(0, 0, 0, 1)');
+	colorPickerCanvas.fillStyle = blackGradient;
+	colorPickerCanvas.fillRect(0, 0, colorPickerWidth, colorPickerHeight);
 	
 	// console.log('colorPicker created');
 }
@@ -301,10 +301,12 @@ function setSampleColorAndInputsValues(x, y, setCoordinates=false) {
 
 	if (setCoordinates) {
 		
-		pointerX = x - colorPickerPointerSize / 2;
-		pointerY = y - colorPickerPointerSize / 2;
-		colorPickerPointer.style.top = pointerY + 'px';
-		colorPickerPointer.style.left = pointerX + 'px';
+		pointerX = x;
+		pointerY = y;
+		var pickerX = x - colorPickerPointerSize / 2 + colorPickerPointerBorderWidth;
+		var pickerY = y - colorPickerPointerSize / 2 + colorPickerPointerBorderWidth / 2;
+		colorPickerPointer.style.left = pickerX + 'px';
+		colorPickerPointer.style.top = pickerY + 'px';
 	}
 
 	colorPickerSample.style.backgroundColor = rgb;
@@ -316,7 +318,6 @@ document.body.onmousedown = function(e) {
 	mousedownElement = e.srcElement;
 	// console.log(mousedownElement);
 	mouseDown = 1;
-
 }
 document.body.onmouseup = function() {
 	mousedownElement = null;
@@ -343,7 +344,7 @@ function onMouseMoveOrClickOnColorPicker(e) {
 	
 	if (mouseY === undefined || mouseY < 0) mouseY = lastMouseY;
 	
-	// console.log(':', mouseX, mouseY);
+	// console.log('mouseXY:', mouseX, mouseY);
 
 	lastMouseX = mouseX;
 	lastMouseY = mouseY;
@@ -368,6 +369,8 @@ function onMouseMoveOrClickOnHuePicker(e) {
 
 	huePointerX = mouseX - colorPickerHuePointerWidth / 2 + colorPickerHuePointerBorderWidth;
 	colorPickerHuePointer.style.left = huePointerX + 'px';
+	
+	// console.log('pointer: ', pointerX, pointerY);
 
 	initColorPicker();
 	setSampleColorAndInputsValues(pointerX, pointerY);
