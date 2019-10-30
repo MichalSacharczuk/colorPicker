@@ -16,22 +16,21 @@ var colorPickerPointerSize = 15;
 var colorPickerSampleSize = 30;
 var colorPickerDefaultBorder = '1px solid #aaa';
 var colorHue = 0;
-var colorPickerInputMargin = '0 5px 5px 5px';
+var colorPickerInputMargin = '0 2px 5px 5px';
 var colorPickerInputWidth = '30px';
 var pointerX = 0;
 var pointerY = 0;
 var huePointerX = 0;
 var colorPickerWindowMargin = 10;
+var colorPickerFontFamily = 'monospace';
 
-function setBoxSizingToBorderBox() {
-	
-	var styleNode = document.createElement('style');
-	styleNode.innerHTML = '* {box-sizing: border-box;}';
+var colorPickerStartX = 0;
+var colorPickerStartY = 0;
+var colorPickerEndX = 0;
+var colorPickerEndY = 0;
+var colorPickerBoxWidth = 0;
+var colorPickerBoxHeight = 0;
 
-	var head = document.getElementsByTagName('head')[0];
-	head.appendChild(styleNode);
-}
-setBoxSizingToBorderBox();
 
 function appendColorPickerHtml() {
 
@@ -45,6 +44,7 @@ function appendColorPickerHtml() {
 	colorPickerDivNode.style.setProperty('left', '0');
 	colorPickerDivNode.style.setProperty('background-color', '#fff');
 	colorPickerDivNode.style.setProperty('border', colorPickerDefaultBorder);
+	colorPickerDivNode.style.setProperty('font-family', colorPickerFontFamily);
 	body.appendChild(colorPickerDivNode);
 
 	var colorPickerCanvasNode = document.createElement('canvas');
@@ -81,7 +81,9 @@ function appendColorPickerHtml() {
 	colorPickerDivNode.appendChild(colorPickerDataDivNode);
 
 	var colorPickerDataInnerDivNode = document.createElement('div');
-	// colorPickerDataInnerDivNode.id = 'color-picker-inner-data';
+	colorPickerDataInnerDivNode.id = 'color-picker-inner-data';
+	colorPickerDataInnerDivNode.style.setProperty('display', 'flex');
+	colorPickerDataInnerDivNode.style.setProperty('align-items', 'center');
 	colorPickerDataDivNode.appendChild(colorPickerDataInnerDivNode);
 
 	var colorSampleNode = document.createElement('div');
@@ -98,12 +100,15 @@ function appendColorPickerHtml() {
 	colorPickerHexSpanNode.id = 'color-picker-hex-span';
 	colorPickerHexSpanNode.innerText = 'HEX';
 	colorPickerHexSpanNode.style.setProperty('margin', colorPickerInputMargin);
+	colorPickerHexSpanNode.style.setProperty('margin-bottom', '0');
 	colorPickerDataInnerDivNode.appendChild(colorPickerHexSpanNode);
 
 	var colorPickerHexSpanInput = document.createElement('input');
 	colorPickerHexSpanInput.id = 'color-picker-hex-input';
 	colorPickerHexSpanInput.style.setProperty('width', '70px');
 	colorPickerHexSpanInput.style.setProperty('margin', colorPickerInputMargin);
+	colorPickerHexSpanInput.style.setProperty('margin-bottom', '0');
+	colorPickerHexSpanInput.style.setProperty('font-family', colorPickerFontFamily);
 	colorPickerDataInnerDivNode.appendChild(colorPickerHexSpanInput);
 
 	// var brNode = document.createElement('br');
@@ -116,7 +121,7 @@ function appendColorPickerHtml() {
 
 		rgbSpanNodeArray[value] = document.createElement('span');
 		rgbSpanNodeArray[value].id = 'color-picker-' + value + '-span';
-		rgbSpanNodeArray[value].innerText = value;
+		rgbSpanNodeArray[value].innerText = value.toUpperCase();
 		rgbSpanNodeArray[value].style.setProperty('margin', colorPickerInputMargin);
 		colorPickerDataDivNode.appendChild(rgbSpanNodeArray[value]);
 
@@ -124,6 +129,7 @@ function appendColorPickerHtml() {
 		rgbInputNodeArray[value].id = 'color-picker-' + value + '-input';
 		rgbInputNodeArray[value].style.setProperty('width', colorPickerInputWidth);
 		rgbInputNodeArray[value].style.setProperty('margin', colorPickerInputMargin);
+		rgbInputNodeArray[value].style.setProperty('font-family', colorPickerFontFamily);
 		// rgbInputNodeArray[value].setAttribute('type', 'number');
 		colorPickerDataDivNode.appendChild(rgbInputNodeArray[value]);		
 	});
@@ -140,9 +146,18 @@ function appendColorPickerHtml() {
 	colorPointerNode.style.setProperty('pointer-events', 'none');
 	colorPickerDivNode.appendChild(colorPointerNode);
 }
-
 appendColorPickerHtml();
 
+
+function setBoxSizingToBorderBox() {
+	
+	var styleNode = document.createElement('style');
+	styleNode.innerHTML = '#color-picker-box, #color-picker-box * {box-sizing: border-box;}';
+
+	var head = document.getElementsByTagName('head')[0];
+	head.appendChild(styleNode);
+}
+setBoxSizingToBorderBox();
 
 
 var colorPickerPointer = document.getElementById('color-picker-pointer');
@@ -241,13 +256,13 @@ function showColorPicker() {
 
 	colorPickerDiv.style.display = 'block';
 
-	var pickerBoxWidth = colorPickerDiv.offsetWidth;
-	var pickerBoxHeight = colorPickerDiv.offsetHeight;
+	colorPickerBoxWidth = colorPickerDiv.offsetWidth;
+	colorPickerBoxHeight = colorPickerDiv.offsetHeight;
 
-	colorPickerDivLeft = colorPickerBtnX + colorPickerBtnWidth / 2 - pickerBoxWidth / 2;
+	colorPickerDivLeft = colorPickerBtnX + colorPickerBtnWidth / 2 - colorPickerBoxWidth / 2;
 	colorPickerDivTop = colorPickerBtnY + colorPickerBtnHeight + topAddSpace;
 
-	var maxColorPickerDivLeft = window.innerWidth - pickerBoxWidth - colorPickerWindowMargin;
+	var maxColorPickerDivLeft = window.innerWidth - colorPickerBoxWidth - colorPickerWindowMargin;
 
 	if (colorPickerDivLeft < colorPickerWindowMargin) {
 		colorPickerDivLeft = colorPickerWindowMargin;
@@ -256,15 +271,24 @@ function showColorPicker() {
 		colorPickerDivLeft = maxColorPickerDivLeft;
 	}
 
-	var maxColorPickerDivTop = window.innerHeight - pickerBoxHeight
+	var maxColorPickerDivTop = window.innerHeight - colorPickerBoxHeight
 							 - colorPickerBtnHeight - colorPickerWindowMargin;
-							 
+
 	if (colorPickerDivTop > maxColorPickerDivTop) {
 		colorPickerDivTop = maxColorPickerDivTop;
 	}
 
 	colorPickerDiv.style.left = colorPickerDivLeft + 'px';
 	colorPickerDiv.style.top = colorPickerDivTop + 'px';
+
+
+	var pickerBoxOffset = colorPickerDiv.getBoundingClientRect();
+	colorPickerStartX = pickerBoxOffset.x;
+	colorPickerStartY = pickerBoxOffset.y;
+	colorPickerEndX = colorPickerStartX + colorPicker.offsetWidth; 
+	colorPickerEndY = colorPickerStartY + colorPicker.offsetHeight;
+	// console.log('colorPicker start xy', colorPickerStartX, colorPickerStartY);
+	// console.log('colorPicker end xy', colorPickerEndX, colorPickerEndY);
 }
 
 
@@ -333,60 +357,52 @@ function setSampleColorAndInputsValues(x, y, setCoordinates=false) {
 
 var mouseDown = 0;
 var mousedownElement = null;
-document.body.onmousedown = function(e) { 
+document.onmousedown = function(e) { 
 	mousedownElement = e.srcElement;
 	// console.log(mousedownElement);
 	mouseDown = 1;
+	// console.log('mouseDown: ' + mouseDown);
 }
-document.body.onmouseup = function() {
+document.onmouseup = function() {
 	mousedownElement = null;
 	mouseDown = 0;
+	// console.log('mouseDown: ' + mouseDown);
 }
 
-var lastMouseX = 0;
-var lastMouseY = 0;
+
 function onMouseMoveOrClickOnColorPicker(e) {
-	
-	var mouseX, mouseY;
 
-	if(e.offsetX) {
-	    mouseX = e.offsetX;
-	    mouseY = e.offsetY;
-	}
-	else if(e.layerX) {
-	    mouseX = e.layerX;
-	    mouseY = e.layerY;
-	}
+	var mouseX = e.x;
+	var mouseY = e.y;
 
-	if (mouseX === undefined || mouseX < 0) mouseX = lastMouseX;
-	else mouseX--; // 1px difference in getImageData
-	
-	if (mouseY === undefined || mouseY < 0) mouseY = lastMouseY;
-	
-	// console.log('mouseXY:', mouseX, mouseY);
+	if (mouseX < colorPickerStartX) mouseX = colorPickerStartX;
+	else if (mouseX >= colorPickerEndX) mouseX = colorPickerEndX - 1; // last getImageData pixel
 
-	lastMouseX = mouseX;
-	lastMouseY = mouseY;
+	if (mouseY < colorPickerStartY) mouseY = colorPickerStartY;
+	else if (mouseY > colorPickerEndY) mouseY = colorPickerEndY;
 
-	setSampleColorAndInputsValues(mouseX, mouseY, true);
+	var relativeMouseX = mouseX - colorPickerStartX;
+	var relativeMouseY = mouseY - colorPickerStartY;
+	// console.log('relativeMouseXY:', relativeMouseX, relativeMouseY);
+
+	setSampleColorAndInputsValues(relativeMouseX, relativeMouseY, true);
 }
 
 function onMouseMoveOrClickOnHuePicker(e) {
+
+	var mouseX = e.x;
+
+	if (mouseX < colorPickerStartX) mouseX = colorPickerStartX;
+	else if (mouseX >= colorPickerEndX) mouseX = colorPickerEndX;
 	
-	var mouseX;
+	var relativeMouseX = mouseX - colorPickerStartX;
 
-	if(e.offsetX) {
-	    mouseX = e.offsetX;
-	}
-	else if(e.layerX) {
-	    mouseX = e.layerX;
-	}
+	var colorData = colorPickerHueCanvas.getImageData(relativeMouseX, 1, 1, 1).data;
 
-	var colorData = colorPickerHueCanvas.getImageData(mouseX, 1, 1, 1).data;
 	colorHue = getHueFromRgb(colorData[0], colorData[1], colorData[2]);
 	// console.log(colorHue);
 
-	huePointerX = mouseX - colorPickerHuePointerWidth / 2 + colorPickerHuePointerBorderWidth;
+	huePointerX = relativeMouseX - colorPickerHuePointerWidth / 2;
 	colorPickerHuePointer.style.left = huePointerX + 'px';
 	
 	// console.log('pointer: ', pointerX, pointerY);
@@ -395,38 +411,41 @@ function onMouseMoveOrClickOnHuePicker(e) {
 	setSampleColorAndInputsValues(pointerX, pointerY);
 }
 
-colorPicker.onmousemove = function (e) {
+// colorPicker.onmousemove = function (e) {
 
-	if (mouseDown && mousedownElement == colorPicker) {
-		onMouseMoveOrClickOnColorPicker(e);
-	}
-}
+// 	if (mouseDown && mousedownElement == colorPicker) {
+// 		onMouseMoveOrClickOnColorPicker(e);
+// 	}
+// }
 
 colorPicker.onmousedown = function (e) {
 
 	onMouseMoveOrClickOnColorPicker(e);
 }
 
-colorPickerHue.onmousemove = function (e) {
+// colorPickerHue.onmousemove = function (e) {
 
-	if (mouseDown && mousedownElement == colorPickerHue) {
-		onMouseMoveOrClickOnHuePicker(e);
-	}
-}
+// 	if (mouseDown && mousedownElement == colorPickerHue) {
+// 		onMouseMoveOrClickOnHuePicker(e);
+// 	}
+// }
 
 colorPickerHue.onmousedown = function (e) {
 
 	onMouseMoveOrClickOnHuePicker(e);
 }
 
-// // // !!!!!!! loose element coordinates when outside the element
-// document.onmousemove = function (e) {
-// 	// console.log(e);
-// 	if (mouseDown && mousedownElement == colorPicker) {
-// 		onMouseMoveOrClickOnColorPicker(e);
-// 	}
+// // !!!!!!! loose element coordinates when outside the element
+document.onmousemove = function (e) {
+	// console.log(e);
+	// console.log(e.x, e.y);
+	// console.log(e.srcElement);
+	if (mouseDown && mousedownElement == colorPicker) {
+		onMouseMoveOrClickOnColorPicker(e);
+	}
 
-// 	else if (mouseDown && mousedownElement == colorPickerHue) {
-// 		onMouseMoveOrClickOnHuePicker(e);
-// 	}
-// }
+	else if (mouseDown && mousedownElement == colorPickerHue) {
+		onMouseMoveOrClickOnHuePicker(e);
+	}
+}
+
