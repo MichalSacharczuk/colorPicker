@@ -45,6 +45,7 @@ function appendColorPickerHtml() {
 	colorPickerDivNode.style.setProperty('background-color', '#fff');
 	colorPickerDivNode.style.setProperty('border', colorPickerDefaultBorder);
 	colorPickerDivNode.style.setProperty('font-family', colorPickerFontFamily);
+	colorPickerDivNode.style.setProperty('user-select', 'none');
 	body.appendChild(colorPickerDivNode);
 
 	var colorPickerCanvasNode = document.createElement('canvas');
@@ -206,29 +207,48 @@ colorPickerBtn.addEventListener('click', function () {
 
 
 
-function getHueFromRgb(r,g,b) {
+function getHslFromRgb (r,g,b) {
 
+	r = r / 255;
+	g = g / 255;
+	b = b / 255;
 	var min = Math.min(Math.min(r,g),b);
 	var max = Math.max(Math.max(r,g),b);
-
+	var delta = max - min;
 	if (min == max) 
 		return 0;
 
-    var hue = 0;
+    var h = 0;
     if (max == r) {
-        hue = (g - b) / (max - min);
+        h = (g - b) / delta;
 
     } else if (max == g) {
-        hue = 2 + (b - r) / (max - min);
+        h = 2 + (b - r) / delta;
 
     } else {
-        hue = 4 + (r - g) / (max - min);
+        h = 4 + (r - g) / delta;
     }
 
-    hue = hue * 60;
-    if (hue < 0) hue = hue + 360;
+    h = h * 60;
+    if (h < 0) h = h + 360;
+    h = Math.round(h);
 
-    return Math.round(hue);
+	var l = (max + min) / 2;
+
+	var s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+
+	s = +(s * 100).toFixed(1);
+	l = +(l * 100).toFixed(1);
+
+	var result = {};
+
+	result.hsl = 'hsl(' + h + ',' + s + '%,' + l + '%)';
+
+	result.h = h;
+	result.s = s;
+	result.l = l;
+
+    return result;
 }
 
 function getHexFromRgb(r,g,b) {
@@ -393,13 +413,14 @@ function onMouseMoveOrClickOnHuePicker(e) {
 	var mouseX = e.x;
 
 	if (mouseX < colorPickerStartX) mouseX = colorPickerStartX;
-	else if (mouseX >= colorPickerEndX) mouseX = colorPickerEndX;
+	else if (mouseX >= colorPickerEndX) mouseX = colorPickerEndX - 1; // last getImageData pixel
 	
 	var relativeMouseX = mouseX - colorPickerStartX;
+	// console.log('relativeMouseX:', relativeMouseX);
 
 	var colorData = colorPickerHueCanvas.getImageData(relativeMouseX, 1, 1, 1).data;
 
-	colorHue = getHueFromRgb(colorData[0], colorData[1], colorData[2]);
+	colorHue = getHslFromRgb(colorData[0], colorData[1], colorData[2]).h;
 	// console.log(colorHue);
 
 	huePointerX = relativeMouseX - colorPickerHuePointerWidth / 2;
