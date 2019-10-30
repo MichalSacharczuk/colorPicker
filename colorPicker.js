@@ -128,9 +128,11 @@ function appendColorPickerHtml() {
 
 		rgbInputNodeArray[value] = document.createElement('input');
 		rgbInputNodeArray[value].id = 'color-picker-' + value + '-input';
+		rgbInputNodeArray[value].classList.add('color-picker-input');
 		rgbInputNodeArray[value].style.setProperty('width', colorPickerInputWidth);
 		rgbInputNodeArray[value].style.setProperty('margin', colorPickerInputMargin);
 		rgbInputNodeArray[value].style.setProperty('font-family', colorPickerFontFamily);
+		rgbInputNodeArray[value].setAttribute('data-color', value);
 		// rgbInputNodeArray[value].setAttribute('type', 'number');
 		colorPickerDataDivNode.appendChild(rgbInputNodeArray[value]);		
 	});
@@ -425,42 +427,24 @@ function onMouseMoveOrClickOnHuePicker(e) {
 
 	huePointerX = relativeMouseX - colorPickerHuePointerWidth / 2;
 	colorPickerHuePointer.style.left = huePointerX + 'px';
-	
 	// console.log('pointer: ', pointerX, pointerY);
 
 	initColorPicker();
 	setSampleColorAndInputsValues(pointerX, pointerY);
 }
 
-// colorPicker.onmousemove = function (e) {
-
-// 	if (mouseDown && mousedownElement == colorPicker) {
-// 		onMouseMoveOrClickOnColorPicker(e);
-// 	}
-// }
-
 colorPicker.onmousedown = function (e) {
 
 	onMouseMoveOrClickOnColorPicker(e);
 }
-
-// colorPickerHue.onmousemove = function (e) {
-
-// 	if (mouseDown && mousedownElement == colorPickerHue) {
-// 		onMouseMoveOrClickOnHuePicker(e);
-// 	}
-// }
 
 colorPickerHue.onmousedown = function (e) {
 
 	onMouseMoveOrClickOnHuePicker(e);
 }
 
-// // !!!!!!! loose element coordinates when outside the element
 document.onmousemove = function (e) {
-	// console.log(e);
 	// console.log(e.x, e.y);
-	// console.log(e.srcElement);
 	if (mouseDown && mousedownElement == colorPicker) {
 		onMouseMoveOrClickOnColorPicker(e);
 	}
@@ -470,3 +454,26 @@ document.onmousemove = function (e) {
 	}
 }
 
+
+
+
+var colorPickerRgbInputs = document.getElementsByClassName('color-picker-input');
+
+Array.prototype.forEach.call(colorPickerRgbInputs, function (element, id) {
+	
+	// var colorType = element.getAttribute('data-color');
+
+	element.addEventListener('keydown', function (e) {
+
+		// console.log(e.key);
+		if (e.key == 'ArrowUp') {
+			element.value++;
+		}
+		else if (e.key == 'ArrowDown') {
+			element.value--;
+		}
+		else if (e.key == 'number?????') {
+
+		}
+	});
+});
