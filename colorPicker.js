@@ -364,13 +364,18 @@ function setPointerCoordinates(x, y) {
 	colorPickerPointer.style.top = pickerY + 'px';
 }
 
+function setPickerSampleColor(r, g, b) {
+
+	var rgb = 'rgb('+ r +','+ g +','+ b +')';
+	colorPickerSample.style.backgroundColor = rgb;
+}
+
 function setSampleColorAndInputsValues(x, y, setCoordinatesBool=false) {
 
 	var colorData = colorPickerCanvas.getImageData(x, y, 1, 1).data;
 	var r = colorData[0];
 	var g = colorData[1];
 	var b = colorData[2];
-	var rgb = 'rgb('+ r +','+ g +','+ b +')';
 
 	appendRgbToInputs(r, g, b);
 
@@ -379,7 +384,7 @@ function setSampleColorAndInputsValues(x, y, setCoordinatesBool=false) {
 		setPointerCoordinates(x, y);
 	}
 
-	colorPickerSample.style.backgroundColor = rgb;
+	setPickerSampleColor(r, g, b);
 }
 
 var mouseDown = 0;
@@ -497,10 +502,17 @@ function updateColorFromInputsValues() {
 	var calcHueX = (1 - colorHue / 360) * colorPickerWidth;
 	calcHueX = Math.round(calcHueX);
 	// console.log('calcHueX:' + calcHueX);
-	
-	var calcX = 
-
 	setColorPickerHuePointer(calcHueX);
+
+	setPickerSampleColor(r, g, b);
+
+	
+
+	// var calcX = s / 100 * colorPickerWidth;
+	// calcX = Math.round(calcX);
+	// var calcY = colorPickerHeight - (l + s / 2) * colorPickerHeight / 100; // // ????????
+	// calcY = Math.round(calcY);
+
 	// setPointerCoordinates(calcX, calcY);
 }
 
