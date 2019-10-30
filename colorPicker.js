@@ -21,7 +21,17 @@ var colorPickerInputWidth = '30px';
 var pointerX = 0;
 var pointerY = 0;
 var huePointerX = 0;
+var colorPickerWindowMargin = 10;
 
+function setBoxSizingToBorderBox() {
+	
+	var styleNode = document.createElement('style');
+	styleNode.innerHTML = '* {box-sizing: border-box;}';
+
+	var head = document.getElementsByTagName('head')[0];
+	head.appendChild(styleNode);
+}
+setBoxSizingToBorderBox();
 
 function appendColorPickerHtml() {
 
@@ -229,23 +239,32 @@ function showColorPicker() {
 	var colorPickerBtnHeight = colorPickerBtnOffset.height;
 	var topAddSpace = 10;
 
-	colorPickerDivLeft = colorPickerBtnX + colorPickerBtnWidth / 2 - colorPicker.width / 2;
+	colorPickerDiv.style.display = 'block';
+
+	var pickerBoxWidth = colorPickerDiv.offsetWidth;
+	var pickerBoxHeight = colorPickerDiv.offsetHeight;
+
+	colorPickerDivLeft = colorPickerBtnX + colorPickerBtnWidth / 2 - pickerBoxWidth / 2;
 	colorPickerDivTop = colorPickerBtnY + colorPickerBtnHeight + topAddSpace;
 
-	if (colorPickerDivLeft < 0) {
-		colorPickerDivLeft = 0;
+	var maxColorPickerDivLeft = window.innerWidth - pickerBoxWidth - colorPickerWindowMargin;
+
+	if (colorPickerDivLeft < colorPickerWindowMargin) {
+		colorPickerDivLeft = colorPickerWindowMargin;
 	}
-	else if (colorPickerDivLeft > window.innerWidth - colorPicker.width) {
-		colorPickerDivLeft = window.innerWidth - colorPicker.width;
+	else if (colorPickerDivLeft > maxColorPickerDivLeft) {
+		colorPickerDivLeft = maxColorPickerDivLeft;
 	}
 
-	if (colorPickerDivTop > window.innerHeight - colorPicker.height) {
-		colorPickerDivTop = window.innerHeight - colorPicker.height;
+	var maxColorPickerDivTop = window.innerHeight - pickerBoxHeight
+							 - colorPickerBtnHeight - colorPickerWindowMargin;
+							 
+	if (colorPickerDivTop > maxColorPickerDivTop) {
+		colorPickerDivTop = maxColorPickerDivTop;
 	}
 
 	colorPickerDiv.style.left = colorPickerDivLeft + 'px';
 	colorPickerDiv.style.top = colorPickerDivTop + 'px';
-	colorPickerDiv.style.display = 'block';
 }
 
 
