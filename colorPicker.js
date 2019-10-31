@@ -107,6 +107,7 @@ function appendColorPickerHtml() {
 	var colorPickerHexSpanInput = document.createElement('input');
 	colorPickerHexSpanInput.id = 'color-picker-hex-input';
 	colorPickerHexSpanInput.style.setProperty('width', '70px');
+	colorPickerHexSpanInput.style.setProperty('text-transform', 'uppercase');
 	colorPickerHexSpanInput.style.setProperty('margin', colorPickerInputMargin);
 	colorPickerHexSpanInput.style.setProperty('margin-bottom', '0');
 	colorPickerHexSpanInput.style.setProperty('font-family', colorPickerFontFamily);
@@ -466,7 +467,7 @@ function setColorPickerHuePointer(relativeMouseX) {
 	colorPickerHuePointer.style.left = huePointerX + 'px';
 }
 
-function updateColorFromInputsValues() {
+function updateColorFromInputsValues(updateHexInput=true) {
 	
 	var r = +colorPickerRedInput.value;
 	var g = +colorPickerGreenInput.value;
@@ -484,7 +485,10 @@ function updateColorFromInputsValues() {
 	if (b < 0) b = 0;
 	if (b > 255) b = 255;
 
-	colorPickerHexInput.value = getHexFromRgb(r, g, b);
+	if (updateHexInput) {
+
+		colorPickerHexInput.value = getHexFromRgb(r, g, b);
+	}
 
 	var hsv = getHsvFromRgb(r, g, b);	
 	var h = hsv.h;
@@ -535,19 +539,82 @@ Array.prototype.forEach.call(colorPickerRgbInputs, function (element, id) {
 var hexInputControlDown = false;
 var hexInputShiftDown = false;
 
-function modifyRgbInputsByHexInputKeydown(modifyNumber) {
+function colorHexToDecNumber(fullHex) {
+
+	var hex = fullHex.replace('#','');
+	var decNumber = parseInt(hex, 16);
+	return decNumber;
+}
+
+function decNumberToHexColor(decNumber) {
+
+	var hexString = decNumber.toString(16);
+	while (hexString.length < 6) {
+		hexString = '0' + hexString;
+	}
+	return '#' + hexString.toUpperCase();
+}
+
+function decimalColorNumberToRgb(decNumber) {
+	
+	var r = Math.floor(decNumber / (256 * 256));
+	var b = decNumber % 256;
+	var g = ((decNumber - b) % (256 * 256)) / 256;
+
+	return { r: r, g: g, b: b }
+}
+
+function setRgbInputsFromDecimalColorNumber(decNumber) {
+	
+	var rgb = decimalColorNumberToRgb(decNumber);
+
+	// console.log(r + ' ' + g + ' ' + b);
+	
+	colorPickerRedInput.value = rgb.r;
+	colorPickerGreenInput.value = rgb.g;
+	colorPickerBlueInput.value = rgb.b;
+}
+
+function getRgbFromHex(hexColor) {
+	
+	var decNumber = colorHexToDecNumber(hexColor);
+	var rgb = decimalColorNumberToRgb(decNumber);
+	return rgb;
+}
+
+function setRgbInputsFromHexColor(hexColor) {
+
+	var rgb = getRgbFromHex(hexColor);
+
+	colorPickerRedInput.value = rgb.r;
+	colorPickerGreenInput.value = rgb.g;
+	colorPickerBlueInput.value = rgb.b;
+}
+
+function modifyInputsAndColorByHexInputKeydown(modifyNumber) {
 		
+	var decNumber = colorHexToDecNumber(colorPickerHexInput.value);
+	
 	if (hexInputControlDown) {
-		colorPickerRedInput.value = +colorPickerRedInput.value + modifyNumber; 
+		decNumber += (256 * 256 * modifyNumber);
 	}
 	else if (hexInputShiftDown) {
-		colorPickerGreenInput.value = +colorPickerGreenInput.value + modifyNumber;
+		decNumber += (256 * modifyNumber);
 	}
 	else {
-		colorPickerBlueInput.value = +colorPickerBlueInput.value + modifyNumber;
+		decNumber += (1 * modifyNumber);
 	}
-	
-	updateColorFromInputsValues();
+
+	if (decNumber < 0) decNumber = 0;
+	else if (decNumber > 256 * 256 * 256 - 1) decNumber = 256 * 256 * 256 - 1;
+
+	var hexColor = decNumberToHexColor(decNumber);
+
+	colorPickerHexInput.value = hexColor;
+
+	setRgbInputsFromDecimalColorNumber(decNumber);
+
+	updateColorFromInputsValues(false);
 }
 
 colorPickerHexInput.addEventListener('keydown', function (e) {
@@ -565,7 +632,12 @@ colorPickerHexInput.addEventListener('keyup', function (e) {
 
 colorPickerHexInput.addEventListener('keydown', function (e) {
 
-	if (e.key == 'ArrowUp') modifyRgbInputsByHexInputKeydown(1);
-	else if (e.key == 'ArrowDown') modifyRgbInputsByHexInputKeydown(-1);
+	if (e.key == 'ArrowUp') modifyInputsAndColorByHexInputKeydown(1);
+	else if (e.key == 'ArrowDown') modifyInputsAndColorByHexInputKeydown(-1);
 });
 
+colorPickerHexInput.addEventListener('input', function (e) {
+
+	setRgbInputsFromHexColor(colorPickerHexInput.value);
+	updateColorFromInputsValues(false);
+});
