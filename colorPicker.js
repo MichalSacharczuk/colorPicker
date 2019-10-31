@@ -532,4 +532,40 @@ Array.prototype.forEach.call(colorPickerRgbInputs, function (element, id) {
 });
 
 
+var hexInputControlDown = false;
+var hexInputShiftDown = false;
+
+function modifyRgbInputsByHexInputKeydown(modifyNumber) {
+		
+	if (hexInputControlDown) {
+		colorPickerRedInput.value = +colorPickerRedInput.value + modifyNumber; 
+	}
+	else if (hexInputShiftDown) {
+		colorPickerGreenInput.value = +colorPickerGreenInput.value + modifyNumber;
+	}
+	else {
+		colorPickerBlueInput.value = +colorPickerBlueInput.value + modifyNumber;
+	}
+	
+	updateColorFromInputsValues();
+}
+
+colorPickerHexInput.addEventListener('keydown', function (e) {
+
+	if (e.key == 'Control') hexInputControlDown = true;
+	else if (e.key == 'Shift') hexInputShiftDown = true;
+});
+
+colorPickerHexInput.addEventListener('keyup', function (e) {
+
+	if (e.key == 'Control') hexInputControlDown = false;
+	else if (e.key == 'Shift') hexInputShiftDown = false;
+});
+
+
+colorPickerHexInput.addEventListener('keydown', function (e) {
+
+	if (e.key == 'ArrowUp') modifyRgbInputsByHexInputKeydown(1);
+	else if (e.key == 'ArrowDown') modifyRgbInputsByHexInputKeydown(-1);
+});
 
