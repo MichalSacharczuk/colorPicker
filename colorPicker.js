@@ -132,7 +132,6 @@ function appendColorPickerHtml() {
 		rgbInputNodeArray[value].style.setProperty('width', colorPickerInputWidth);
 		rgbInputNodeArray[value].style.setProperty('margin', colorPickerInputMargin);
 		rgbInputNodeArray[value].style.setProperty('font-family', colorPickerFontFamily);
-		rgbInputNodeArray[value].setAttribute('data-color', value);
 		// rgbInputNodeArray[value].setAttribute('type', 'number');
 		colorPickerDataDivNode.appendChild(rgbInputNodeArray[value]);		
 	});
@@ -209,51 +208,44 @@ colorPickerBtn.addEventListener('click', function () {
 
 
 
-function getHslFromRgb (r,g,b) {
+function getHsvFromRgb(r, g, b) {
 
 	r = r / 255;
 	g = g / 255;
 	b = b / 255;
-	var min = Math.min(Math.min(r,g),b);
+
 	var max = Math.max(Math.max(r,g),b);
+	var min = Math.min(Math.min(r,g),b);
+
+	var h = 0;
+	var v = +max.toFixed(3);
+
 	var delta = max - min;
-	if (min == max) 
-		return 0;
 
-    var h = 0;
-    if (max == r) {
-        h = (g - b) / delta;
+	var s = max === 0 ? 0 : delta / max;
+	s = +s.toFixed(3);
 
-    } else if (max == g) {
-        h = 2 + (b - r) / delta;
+	if (max != min) {
 
-    } else {
-        h = 4 + (r - g) / delta;
-    }
+		switch(max) {
 
-    h = h * 60;
-    if (h < 0) h = h + 360;
-    h = Math.round(h);
+			case r: h = (g - b) / delta + (g < b ? 6 : 0); break;
+			case g: h = (b - r) / delta + 2; break;
+			case b: h = (r - g) / delta + 4; break;
+		}
+		h = Math.round(h * 60);
+	}
 
-	var l = (max + min) / 2;
+	var result = { 
+		h: h, // 0 - 360
+		s: s, // 0 - 1
+		v: v  // 0 - 1
+	};
 
-	var s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
-
-	s = +(s * 100).toFixed(1);
-	l = +(l * 100).toFixed(1);
-
-	var result = {};
-
-	result.hsl = 'hsl(' + h + ',' + s + '%,' + l + '%)';
-
-	result.h = h;
-	result.s = s;
-	result.l = l;
-
-    return result;
+	return result;
 }
 
-function getHexFromRgb(r,g,b) {
+function getHexFromRgb(r, g, b) {
 
 	var hexR = r.toString(16);
 	if (hexR.length == 1) hexR = '0' + hexR;
@@ -264,7 +256,7 @@ function getHexFromRgb(r,g,b) {
 
 	var hex = '#' + hexR + hexG + hexB;
 
-    return hex.toUpperCase();
+	return hex.toUpperCase();
 }
 
 function showColorPicker() {
@@ -358,8 +350,8 @@ function setPointerCoordinates(x, y) {
 	
 	pointerX = x;
 	pointerY = y;
-	var pickerX = x - colorPickerPointerSize / 2 + colorPickerPointerBorderWidth;
-	var pickerY = y - colorPickerPointerSize / 2 + colorPickerPointerBorderWidth / 2;
+	var pickerX = x - colorPickerPointerSize / 2;
+	var pickerY = y - colorPickerPointerSize / 2;
 	colorPickerPointer.style.left = pickerX + 'px';
 	colorPickerPointer.style.top = pickerY + 'px';
 }
@@ -432,7 +424,10 @@ function onMouseMoveOrClickOnHuePicker(e) {
 
 	var colorData = colorPickerHueCanvas.getImageData(relativeMouseX, 1, 1, 1).data;
 
-	colorHue = getHslFromRgb(colorData[0], colorData[1], colorData[2]).h;
+	var r = colorData[0];
+	var g = colorData[1];
+	var b = colorData[2];
+	colorHue = getHsvFromRgb(r, g, b).h;
 	// console.log('colorHue: ' + colorHue);
 
 	setColorPickerHuePointer(relativeMouseX);
@@ -473,13 +468,11 @@ function setColorPickerHuePointer(relativeMouseX) {
 
 function updateColorFromInputsValues() {
 	
-	// console.log('updateColorFromInputsValues');
-
 	var r = +colorPickerRedInput.value;
 	var g = +colorPickerGreenInput.value;
 	var b = +colorPickerBlueInput.value;
 
-	console.log('rgb: ', r, g, b);
+	// console.log('rgb: ', r, g, b);
 
 	if (isNaN(r) || isNaN(g) || isNaN(b)) {
 		return false;
@@ -491,10 +484,12 @@ function updateColorFromInputsValues() {
 	if (b < 0) b = 0;
 	if (b > 255) b = 255;
 
-	var hsl = getHslFromRgb(r, g, b);	
-	var h = hsl.h;
-	var s = hsl.s;
-	var l = hsl.l;
+	colorPickerHexInput.value = getHexFromRgb(r, g, b);
+
+	var hsv = getHsvFromRgb(r, g, b);	
+	var h = hsv.h;
+	var s = hsv.s;
+	var v = hsv.v;
 
 	colorHue = h;
 	initColorPicker();
@@ -506,22 +501,17 @@ function updateColorFromInputsValues() {
 
 	setPickerSampleColor(r, g, b);
 
-	
-
-	// var calcX = s / 100 * colorPickerWidth;
-	// calcX = Math.round(calcX);
-	// var calcY = colorPickerHeight - (l + s / 2) * colorPickerHeight / 100; // // ????????
-	// calcY = Math.round(calcY);
-
-	// setPointerCoordinates(calcX, calcY);
+	var calcX = s * colorPickerWidth;
+	calcX = Math.round(calcX);
+	var calcY = (1 - v) * colorPickerHeight;
+	calcY = Math.round(calcY);
+	setPointerCoordinates(calcX, calcY);
 }
 
 var colorPickerRgbInputs = document.getElementsByClassName('color-picker-input');
 
 Array.prototype.forEach.call(colorPickerRgbInputs, function (element, id) {
 	
-	// var colorType = element.getAttribute('data-color');
-
 	element.addEventListener('keydown', function (e) {
 
 		// console.log(e.key);
@@ -540,3 +530,6 @@ Array.prototype.forEach.call(colorPickerRgbInputs, function (element, id) {
 		updateColorFromInputsValues();
 	});
 });
+
+
+
